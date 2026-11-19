@@ -1,6 +1,6 @@
 // Service worker: permite usar la app sin conexión una vez instalada en el móvil.
 // Sube la versión cuando publiques cambios para que los clientes se actualicen.
-const CACHE = 'tareasoscuro-v7';
+const CACHE = 'tareasoscuro-v8';
 const SHELL = [
   './',
   './index.html',
