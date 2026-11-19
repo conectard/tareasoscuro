@@ -23,12 +23,12 @@ const chunk = (type, data) => {
   const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
   return Buffer.concat([len, td, crc]);
 };
-function png(size, rgba) {
+function png(w, h, rgba) {
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4);
+  ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
   ihdr[8] = 8; ihdr[9] = 6;
-  const raw = Buffer.alloc(size * (size * 4 + 1));
-  for (let y = 0; y < size; y++) rgba.copy(raw, y * (size * 4 + 1) + 1, y * size * 4, (y + 1) * size * 4);
+  const raw = Buffer.alloc(h * (w * 4 + 1));
+  for (let y = 0; y < h; y++) rgba.copy(raw, y * (w * 4 + 1) + 1, y * w * 4, (y + 1) * w * 4);
   return Buffer.concat([
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0)),
@@ -80,8 +80,34 @@ function render(size, opts = {}) {
     if (a) { out[o] = r / a; out[o + 1] = g / a; out[o + 2] = b / a; }
     out[o + 3] = a / (ss * ss);
   }
-  return png(size, out);
+  return png(size, size, out);
 }
+
+// Pantalla de arranque de iOS: fondo de la app con el icono de 120 pt centrado
+// (coincide con el #spl de index.html, que continúa la animación al cargar).
+const BG = [0x07, 0x0b, 0x11];
+function splash(w, h, scale) {
+  const out = Buffer.alloc(w * h * 4);
+  for (let p = 0; p < w * h; p++) { out[p * 4] = BG[0]; out[p * 4 + 1] = BG[1]; out[p * 4 + 2] = BG[2]; out[p * 4 + 3] = 255; }
+  const sz = 120 * scale, ox = Math.round((w - sz) / 2), oy = Math.round((h - sz) / 2), ss = 4;
+  for (let y = 0; y < sz; y++) for (let x = 0; x < sz; x++) {
+    let r = 0, g = 0, b = 0, a = 0;
+    for (let j = 0; j < ss; j++) for (let i = 0; i < ss; i++) {
+      const c = sample((x + (i + 0.5) / ss) / sz, (y + (j + 0.5) / ss) / sz, {});
+      r += c[0] * c[3] / 255; g += c[1] * c[3] / 255; b += c[2] * c[3] / 255; a += c[3] / 255;
+    }
+    const n = ss * ss, al = a / n, o = ((oy + y) * w + ox + x) * 4;
+    out[o] = Math.round(r / n + BG[0] * (1 - al));
+    out[o + 1] = Math.round(g / n + BG[1] * (1 - al));
+    out[o + 2] = Math.round(b / n + BG[2] * (1 - al));
+  }
+  return png(w, h, out);
+}
+// [anchoPx, altoPx, escala] — iPhones con pantalla de inicio enlazada en index.html
+const SPLASH = [
+  [1320, 2868, 3], [1290, 2796, 3], [1284, 2778, 3], [1260, 2736, 3], [1242, 2688, 3], [828, 1792, 2],
+  [1206, 2622, 3], [1179, 2556, 3], [1170, 2532, 3], [1125, 2436, 3], [1242, 2208, 3], [750, 1334, 2],
+];
 
 const write = (rel, data) => { const f = join(root, rel); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, data); console.log('✔', rel); };
 write('app/icons/icon-192.png', render(192));
@@ -93,3 +119,4 @@ write('electron/assets/tray.png', render(16));
 write('electron/assets/tray@2x.png', render(32));
 write('build/icon.png', render(512));
 write('build/icon.ico', ico([16, 24, 32, 48, 64, 128, 256].map((s) => [s, render(s)])));
+for (const [w, h, s] of SPLASH) write(`app/splash/${w}x${h}.png`, splash(w, h, s));
