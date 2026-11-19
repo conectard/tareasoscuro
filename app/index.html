@@ -124,7 +124,7 @@ details[open]>*:not(summary){animation:rise .3s both}.ck.pl i{animation:pl .45s}
 html.desk,html.desk body{height:100%;overflow:hidden}
 html.desk body{display:flex;flex-direction:column;background:#0b1119;min-height:0;user-select:none}
 html.desk input{user-select:text}
-html.desk #app{flex:1;min-height:0;width:100%;margin:0;overflow-y:auto;overscroll-behavior:contain;max-width:none;padding:2px 14px 14px;scrollbar-width:thin;scrollbar-color:#2a3644 transparent}
+html.desk #app{flex:1;min-height:0;width:100%;margin:0;overflow-y:auto;overscroll-behavior:contain;max-width:none;padding:2px 14px 14px}
 html.desk.full #app{padding:14px 20px 130px}
 html.desk.full #app>*{max-width:460px;margin-left:auto;margin-right:auto}
 html.desk #tb{display:flex;align-items:center;gap:2px;height:40px;padding:0 6px 0 14px;flex:none;-webkit-app-region:drag;position:relative;z-index:50;background:#0b1119;border-bottom:1px solid var(--line)}
@@ -138,7 +138,7 @@ html.desk:not(.full) .mini{position:relative;top:auto;left:auto;right:auto;margi
 html.desk #qa{display:flex;gap:8px;padding:10px 12px 12px;flex:none;border-top:1px solid var(--line);background:#0b1119}
 html.desk.full #qa{display:none}
 #qa input{height:40px;border-radius:11px;border-color:#ffffff1f;font-size:14px;padding:0 12px}#qa input:focus{border-color:var(--blue);outline:none}
-#qa button{width:40px;height:40px;flex:none;border:0;border-radius:11px;background:linear-gradient(105deg,#4720d8,#6539ff);display:grid;place-items:center;padding:0}
+#qa button{width:40px;height:40px;flex:none;border:0;border-radius:11px;background:linear-gradient(105deg,#1f7a4d,#3fae6b);display:grid;place-items:center;padding:0}
 #qa svg{width:18px;height:18px;stroke:#fff;stroke-width:2.4;fill:none;stroke-linecap:round}
 .desk #toast{top:48px}.desk .al{top:48px}.desk .scrim,.desk .cs{top:40px}
 .desk .sheet{max-height:calc(100vh - 52px);border-radius:20px 20px 0 0;padding:16px}
@@ -155,6 +155,12 @@ html.desk:not(.full) .tx .m{font-size:11.5px}
 html.desk:not(.full) .pr{font-size:0;gap:0}
 html.desk:not(.full) summary{min-height:40px}
 html.desk:not(.full) .lab{margin-top:12px}
+/* ---------- Sin barras ni flechas de desplazamiento (se sigue pudiendo desplazar) ---------- */
+*{scrollbar-width:none;-ms-overflow-style:none}
+::-webkit-scrollbar{display:none;width:0;height:0}
+/* ---------- Sección Hoy en verde (como el Árbol); el check sigue en azul ---------- */
+#app.t-hoy .chip.on{background:#16332a;border-color:#4fbf7c;color:#fff}
+.dock.t-hoy .fab{background:linear-gradient(105deg,#1f7a4d,#3fae6b);box-shadow:0 8px 24px #2f9a6266}
 /* ---------- Móvil: sensación de app nativa ---------- */
 #ib,#spl,.grab{display:none}
 html:not(.desk){background:#070b11;touch-action:manipulation}
@@ -225,11 +231,13 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;
 function logs(a,b){var r=[];for(var i=a;i<=b;i++)r.push(add(-i));return r}
 function seed(){var o=seed0(),P={'Enviar informe trimestral':'a','Pagar recibo de la luz':'a','Revisar diseño de la app':'b','Reunión con cliente':'a','Entregar portafolio web':'a','Cita médica':'m'};o.tasks.forEach(function(t){t.p=P[t.t]||'m'});return o}
 function seed0(){var k=1,T=function(t,a,d,x){return{id:k++,t:t,a:a,d:d,done:!!x}},all=[0,1,2,3,4,5,6];
-return{xp:340,log:[{t:'Leer 20 minutos',x:10},{t:'Comprar víveres',x:15}],
+return{xp:0,log:[],mig:1,
 tasks:[T('Enviar informe trimestral','Trabajo',TODAY),T('Pagar recibo de la luz','Hogar',TODAY),T('Llamar al dentista','Personal',TODAY),T('Revisar diseño de la app','Proyectos',TODAY),T('Comprar víveres','Hogar',TODAY,1),T('Reunión de equipo','Trabajo',TODAY,1),T('Reunión con cliente','Trabajo',add(1)),T('Comprar regalo de cumpleaños','Personal',add(1)),T('Renovar seguro del auto','Hogar',add(5)),T('Entregar portafolio web','Proyectos',add(11)),T('Cita médica','Personal',add(13))],
 habits:[{id:101,n:'Leer 20 minutos',a:'Personal',days:all,log:logs(0,11)},{id:102,n:'Ejercicio 30 minutos',a:'Personal',days:all,log:logs(1,5)},{id:103,n:'Beber 2 L de agua',a:'Hogar',days:all,log:logs(1,21)}]}}
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.tasks)S=seed();
+// Quita una sola vez el XP y la actividad de ejemplo que traían las versiones anteriores (340 XP + 2 entradas)
+if(!S.mig){S.xp=Math.max(0,(S.xp||0)-340);S.log=(S.log||[]).filter(function(e,i,a){return !(i>=a.length-2&&((e.t==='Leer 20 minutos'&&e.x===10)||(e.t==='Comprar víveres'&&e.x===15)))});S.mig=1;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function stage(x){var i=0;ST.forEach(function(s,k){if(x>=s[1])i=k});return i}
 function streak(h){var n=0;for(var i=0;i<400;i++){var d=add(-i),w=new Date(d+'T00:00').getDay();if(h.days.indexOf(w)<0)continue;if(h.log.indexOf(d)>=0)n++;else if(i>0)break}return n}
@@ -245,7 +253,7 @@ function sec(k,title,date,list){return '<details data-k="'+k+'"'+(V.open[k]?' op
 function hoy(){var f=function(t){return V.filter==='Todo'||t.a===V.filter},L=S.tasks.filter(f),td=L.filter(function(t){return t.d<=TODAY}),dn=td.filter(function(t){return t.done}).length,
 pend=td.filter(function(t){return!t.done}).sort(function(a,b){return PRK[a.p||'m']-PRK[b.p||'m']}),man=L.filter(function(t){return!t.done&&t.d===add(1)}),px=L.filter(function(t){return!t.done&&t.d>add(1)}).sort(function(a,b){return a.d<b.d?-1:1}),h=new Date().getHours(),p=td.length?Math.round(dn/td.length*100):0;
 return '<div class="hd"><h1>'+(h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches')+', Marcial</h1><div class="m">'+new Date().toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'})+'</div></div>'+
-'<div class="card hero"><svg viewBox="0 0 350 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="h1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2150"/><stop offset=".6" stop-color="#5a3d7a"/><stop offset="1" stop-color="#e58a6d"/></linearGradient><linearGradient id="h2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070b11" stop-opacity="0"/><stop offset="1" stop-color="#070b11" stop-opacity=".9"/></linearGradient></defs><rect width="350" height="200" fill="url(#h1)"/><circle cx="255" cy="100" r="22" fill="#ffd9a0" opacity=".9"/><path d="M0 125L50 85L90 115L140 70L200 120L260 90L350 130V200H0Z" fill="#3a3a78"/><path d="M0 150L60 112L120 142L190 102L260 148L320 122L350 138V200H0Z" fill="#232a5a"/><path d="M0 172Q90 160 180 170T350 166V200H0Z" fill="#101a38"/><path d="M10 200L26 135L42 200ZM34 200L52 118L70 200ZM290 200L308 125L326 200ZM316 200L330 148L344 200Z" fill="#0a1020"/><rect y="70" width="350" height="130" fill="url(#h2)"/></svg><div class="tb"><div style="font-size:13px;color:#e6e9ff">Progreso de hoy</div><h2 style="font-size:28px;margin:4px 0 10px">'+dn+' de '+td.length+' tareas</h2><div class="bar" style="background:#ffffff30"><i style="width:'+p+'%;background:#fff"></i></div></div></div>'+
+'<div class="card hero"><svg viewBox="0 0 350 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="h1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1f2b"/><stop offset=".6" stop-color="#1f5a4c"/><stop offset="1" stop-color="#7cc79a"/></linearGradient><linearGradient id="h2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070b11" stop-opacity="0"/><stop offset="1" stop-color="#070b11" stop-opacity=".9"/></linearGradient></defs><rect width="350" height="200" fill="url(#h1)"/><circle cx="255" cy="100" r="22" fill="#e4f8d4" opacity=".85"/><path d="M0 125L50 85L90 115L140 70L200 120L260 90L350 130V200H0Z" fill="#2a6656"/><path d="M0 150L60 112L120 142L190 102L260 148L320 122L350 138V200H0Z" fill="#1d5048"/><path d="M0 172Q90 160 180 170T350 166V200H0Z" fill="#123a38"/><path d="M10 200L26 135L42 200ZM34 200L52 118L70 200ZM290 200L308 125L326 200ZM316 200L330 148L344 200Z" fill="#0a2224"/><rect y="70" width="350" height="130" fill="url(#h2)"/></svg><div class="tb"><div style="font-size:13px;color:#d4f5e2">Progreso de hoy</div><h2 style="font-size:28px;margin:4px 0 10px">'+dn+' de '+td.length+' tareas</h2><div class="bar" style="background:#ffffff30;height:8px"><i style="width:'+p+'%;background:linear-gradient(90deg,#2f9a62,#7be0a4)"></i></div></div></div>'+
 '<div class="chips">'+['Todo'].concat(Object.keys(AREAS)).map(function(a){return '<button class="chip'+(V.filter===a?' on':'')+'" data-a="flt" data-v="'+a+'">'+a+'</button>'}).join('')+'</div>'+
 '<div class="lab">PENDIENTES</div>'+(pend.length?pend.map(row).join(''):'<div class="m" style="padding:12px 0">¡Todo al día por hoy!</div>')+
 '<div style="margin-top:10px">'+sec('man','Mañana',fmt(add(1)),man)+sec('prox','Próximamente','Próximos días',px)+sec('dn','Completadas','',L.filter(function(t){return t.done}))+'</div>'}
@@ -261,7 +269,7 @@ monthCard(dd)+'<div class="lab">AGENDA DEL DÍA</div>'+(T.length?T.map(row).join
 function arbol(){var s=stage(S.xp),nx=ST[Math.min(s+1,4)][1],pr=s>=4?100:(S.xp-ST[s][1])/(nx-ST[s][1])*100;
 return '<div class="hd"><h1>Mi árbol</h1><div class="m">'+ST[s][0]+'</div></div><div class="card tree hero'+(V.pop?' pop':'')+'"><svg viewBox="-10 0 68 48" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Tu árbol: '+ST[s][0]+'"><circle cx="-4" cy="6" r=".3" fill="#fff"/><circle cx="52" cy="9" r=".3" fill="#fff"/><circle cx="8" cy="3" r=".25" fill="#fff"/><circle cx="40" cy="4" r=".25" fill="#fff"/><path d="M-10 40Q24 35 58 40V48H-10Z" fill="#1d3b33"/>'+TS[s]+'</svg></div>'+
 '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><h2 style="font-size:22px">'+ST[s][0]+'</h2><b style="color:var(--green);font-size:14px">'+S.xp+' XP</b></div><div class="bar" style="margin:10px 0 6px;height:8px"><i style="width:'+pr+'%;background:linear-gradient(90deg,#2f9a62,#7be0a4)"></i></div><div class="m" style="font-size:12px">'+(s>=4?'¡Tu árbol está dando frutos!':'Faltan '+(nx-S.xp)+' XP para ser '+ST[s+1][0])+'</div>'+
-'<div class="st">'+SHORT.map(function(l,i){return '<div class="'+(i===s?'cur':i>s?'lk':'')+'"><span>'+sv(i,44)+'</span>'+l+'</div>'}).join('')+'</div><div class="lab">ACTIVIDAD RECIENTE</div>'+S.log.map(function(e){return '<div class="t"><b style="font-weight:500">'+esc(e.t)+'</b><span style="margin-left:auto;font-size:12px;color:var(--green);font-weight:700">+'+e.x+' XP</span></div>'}).join('')}
+'<div class="st">'+SHORT.map(function(l,i){return '<div class="'+(i===s?'cur':i>s?'lk':'')+'"><span>'+sv(i,44)+'</span>'+l+'</div>'}).join('')+'</div><div class="lab">ACTIVIDAD RECIENTE</div>'+(S.log.length?'':'<div class="m" style="padding:10px 0">Completa tareas y hábitos para que tu árbol crezca.</div>')+S.log.map(function(e){return '<div class="t"><b style="font-weight:500">'+esc(e.t)+'</b><span style="margin-left:auto;font-size:12px;color:var(--green);font-weight:700">+'+e.x+' XP</span></div>'}).join('')}
 function modal(){var m=V.m;if(!m)return '';var hb=m.k==='habit',ed=!!m.id,H=hb&&ed?S.habits.filter(function(x){return x.id===m.id})[0]:null,ex='';
 if(ed&&!hb)ex='<button class="ghost'+(m.done?' ok':'')+'" data-a="mt">'+(m.done?'Completada ✓ · tocar para desmarcar':'Marcar como completada')+'</button>';
 if(H){var dn=H.log.indexOf(TODAY)>=0,w=mgrid(H,V.day);
@@ -273,7 +281,7 @@ return '<div class="scrim '+(V.closing?'out':V.mAnim?'in':'')+'" data-a="x"><div
 opts(m)+'<button class="go" data-a="ok">'+(ed?'Guardar cambios':hb?'Crear hábito':'Crear tarea')+'</button>'+(ed?'<button class="ghost del" data-a="del">Eliminar</button>':'')+'</div></div>'}
 function icon(p){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+p+'</svg>'}
 // ---------- Widget de escritorio ----------
-var LOGO='<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#5a2ff0"/><path d="M7 12.5l3.3 3.1L17 8.6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var LOGO='<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#000" stroke="#ffffff26"/><path d="M7 12.5l3.3 3.1L17 8.6" fill="none" stroke="#4cd787" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 var IPIN='<path d="M9 3.5h6l-.8 6.2 3.3 3.3H6.5l3.3-3.3zM12 13v7.5"/>',IGROW='<path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/>',ISHR='<path d="M19 10h-5V5M5 14h5v5M14 10l6-6M10 14l-6 6"/>';
 function renderBar(){if(!DESK)return;$('#tb').innerHTML='<span class="tl">'+LOGO+(V.full?'TareasOscuro':'Pendientes')+'</span><span class="sp"></span>'+
 '<button class="'+(DS.pinned?'on':'')+'" data-a="pin" title="'+(DS.pinned?'Fijado encima de otras ventanas':'Fijar encima de otras ventanas')+'" aria-pressed="'+!!DS.pinned+'">'+icon(IPIN)+'</button>'+
@@ -286,13 +294,13 @@ man=S.tasks.filter(function(t){return!t.done&&t.d===add(1)}),px=S.tasks.filter(f
 wd=new Date(TODAY+'T00:00').getDay(),H=S.habits.filter(function(h){return h.days.indexOf(wd)>=0}),hd=H.filter(function(h){return h.log.indexOf(TODAY)>=0}).length,
 p=td.length?Math.round(dn/td.length*100):0,C=119.4;
 return '<div class="wh"><div class="d"><b>'+new Date(TODAY+'T00:00').toLocaleDateString('es',{weekday:'long',day:'numeric',month:'short'})+'</b><span class="m">'+(pend.length?pend.length+(pend.length>1?' pendientes':' pendiente')+' · '+dn+' de '+td.length+' hechas':'¡Todo al día por hoy!')+'</span></div>'+
-'<div class="rg" role="img" aria-label="'+p+'% completado"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="none" stroke="#222c39" stroke-width="4"/><circle cx="22" cy="22" r="19" fill="none" stroke="#39a9ff" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-p/100)).toFixed(1)+'"/></svg><span>'+p+'%</span></div></div>'+
+'<div class="rg" role="img" aria-label="'+p+'% completado"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" fill="none" stroke="#222c39" stroke-width="4"/><circle cx="22" cy="22" r="19" fill="none" stroke="#4fbf7c" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-p/100)).toFixed(1)+'"/></svg><span>'+p+'%</span></div></div>'+
 '<div class="lab">PENDIENTES HOY</div>'+(pend.length?pend.map(row).join(''):'<div class="m" style="padding:10px 0">Nada pendiente. Escribe abajo para añadir.</div>')+
 '<div style="margin-top:10px"><details data-k="hab"'+(V.open.hab?' open':'')+'><summary><b style="font:700 14px var(--fh)">Hábitos de hoy</b><span class="cnt">'+hd+'/'+H.length+'</span><span class="cv" aria-hidden="true" style="margin-left:auto">›</span></summary>'+(H.length?H.map(habRow).join(''):'<div class="m" style="padding:6px 0 12px">Sin hábitos hoy</div>')+'</details>'+
 sec('man','Mañana',fmt(add(1)),man)+sec('prox','Próximamente','',px)+'</div>'}
 function render(){var t=V.tab,N=[['hoy','Hoy','<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],['agenda','Agenda','<path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4"/>'],['arbol','Árbol','<circle cx="12" cy="9" r="6"/><path d="M12 15v6M9 21h6"/>']];
 var W=DESK&&!V.full;document.documentElement.classList.toggle('full',DESK&&!!V.full);renderBar();
-drawAlert();$('#app').className=V.enter?'enter':'';$('#app').innerHTML=(W?widget():({hoy:hoy,agenda:agenda,arbol:arbol})[t]())+modal();
+drawAlert();$('#app').className=(V.enter?'enter ':'')+(W?'':'t-'+t);$('#dock').className='dock'+(W?'':' t-'+t);$('#app').innerHTML=(W?widget():({hoy:hoy,agenda:agenda,arbol:arbol})[t]())+modal();
 $('#dock').innerHTML=(TM&&!(V.m&&V.m.k===TM.k&&V.m.id===TM.id)?mini():'')+(W?'':(t==='arbol'?'':'<button class="fab" data-a="new" data-v="'+(t==='agenda'?'habit':'task')+'" aria-label="'+(t==='agenda'?'Nuevo hábito':'Nueva tarea')+'">'+icon('<path d="M12 5v14M5 12h14"/>')+'</button>')+'<nav class="nav">'+N.map(function(n){return '<button class="'+(t===n[0]?'on':'')+'" data-a="nav" data-v="'+n[0]+'" aria-label="'+n[1]+'"'+(t===n[0]?' aria-current="page"':'')+'>'+icon(n[2])+n[1]+'</button>'}).join('')+'</nav>');$('#ib b').textContent={hoy:'Hoy',agenda:'Agenda',arbol:'Mi árbol'}[t];onScroll();V.pop=0;V.sl='';V.enter=0;V.mAnim=0;V.pl=''}
 // Barra superior compacta al desplazar (móvil)
 function onScroll(){var b=$('#ib');if(b)b.classList.toggle('on',(window.scrollY||0)>40)}

@@ -48,7 +48,8 @@ function ico(pngs) {
   return Buffer.concat([head, ...pngs.map((p) => p[1])]);
 }
 
-const A = [0x47, 0x20, 0xd8], B = [0x65, 0x39, 0xff];
+// Fondo negro (degradado muy sutil) y check verde
+const A = [0x14, 0x16, 0x19], B = [0x00, 0x00, 0x00], CHECK = [0x4c, 0xd7, 0x87];
 const segDist = (px, py, ax, ay, bx, by) => {
   const dx = bx - ax, dy = by - ay;
   const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
@@ -64,7 +65,7 @@ function sample(u, v, { maskable }) {
   const s = maskable ? 0.62 : 0.86; // zona segura para iconos maskable
   const cu = (u - 0.5) / s + 0.5, cv = (v - 0.5) / s + 0.5;
   const d = Math.min(segDist(cu, cv, 0.29, 0.52, 0.44, 0.67), segDist(cu, cv, 0.44, 0.67, 0.72, 0.37));
-  if (d <= 0.062) return [255, 255, 255, 255];
+  if (d <= 0.062) return [...CHECK, 255];
   const t = Math.min(1, Math.max(0, (u + v) / 2));
   return [0, 1, 2].map((i) => Math.round(A[i] + (B[i] - A[i]) * t)).concat(255);
 }
